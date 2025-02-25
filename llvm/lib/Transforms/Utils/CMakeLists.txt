@@ -22,6 +22,7 @@ add_llvm_component_library(LLVMTransformUtils
   Debugify.cpp
   DemoteRegToStack.cpp
   DXILUpgrade.cpp
+  EDAN75.cpp
   EntryExitInstrumenter.cpp
   EscapeEnumerator.cpp
   Evaluator.cpp
