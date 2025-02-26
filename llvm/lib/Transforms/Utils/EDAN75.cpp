@@ -13,11 +13,7 @@
 using namespace llvm;
 
 PreservedAnalyses EDAN75Pass::run(Function &F, FunctionAnalysisManager &AM) {
-  errs() << F.getName() << "\n";
-
   for (BasicBlock &BB : F) {
-    errs() << "BB\n";
-
     llvm::DenseMap<Value *, Value *> storedValues; // address -> value
     llvm::DenseSet<Value *> allocaAddresses;
 
@@ -59,16 +55,31 @@ PreservedAnalyses EDAN75Pass::run(Function &F, FunctionAnalysisManager &AM) {
         break;
       }
       default:
-        iter++;
+        // check whether I is identical to an earlier instruction
+        bool isDuplicate = false;
+        for (auto iter2 = BB.begin(); iter2 != iter; iter2++) {
+          Instruction &I2 = *iter2;
+          if (I.isIdenticalTo(&I2)) {
+            isDuplicate = true;
+            I.replaceAllUsesWith(&I2);
+            break;
+          }
+        }
+
+        if (isDuplicate) {
+          iter = I.eraseFromParent();
+        } else {
+          iter++;
+        }
         break;
       }
     }
 
-    // remove all allocas that are no longer needed
+    // remove all instructions that are no longer needed
     iter = BB.begin();
     while (iter != BB.end()) {
       Instruction &I = *iter;
-      if (I.getOpcode() == Instruction::Alloca && !I.hasNUsesOrMore(1)) {
+      if (I.isSafeToRemove() && !I.hasNUsesOrMore(1)) {
         iter = I.eraseFromParent();
       } else {
         iter++;
