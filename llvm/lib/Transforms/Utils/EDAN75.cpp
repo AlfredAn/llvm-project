@@ -13,6 +13,16 @@
 using namespace llvm;
 
 PreservedAnalyses EDAN75Pass::run(Function &F, FunctionAnalysisManager &AM) {
+  // ensure that there is not more than one basic block
+  bool atLeastOne = false;
+  for ([[maybe_unused]] BasicBlock &_ : F) {
+    if (atLeastOne) {
+      return PreservedAnalyses::all();
+    } else {
+      atLeastOne = true;
+    }
+  }
+
   for (BasicBlock &BB : F) {
     llvm::DenseMap<Value *, Value *> storedValues; // address -> value
     llvm::DenseSet<Value *> allocaAddresses;
